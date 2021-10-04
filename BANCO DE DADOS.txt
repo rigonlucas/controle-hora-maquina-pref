@@ -1,0 +1,66 @@
+
+CREATE TABLE contribuinte
+(
+  cod_contribuinte serial NOT NULL,
+  nome character(45),
+  apelido character(45),
+  cpf character(16),
+  rg character(16),
+  n_bloco_produtor character(16),
+  telefone character(20),
+  horas_pagas numeric(6,2),
+  endereco character varying(45),
+  horas_executadas numeric(6,2),
+  CONSTRAINT contribuinte_pkey PRIMARY KEY (cod_contribuinte)
+)
+
+CREATE TABLE tipo_hora
+(
+  cod_tipo serial NOT NULL,
+  tipo character(45),
+  valor numeric(4,2),
+  CONSTRAINT tipo_hora_pkey PRIMARY KEY (cod_tipo)
+)
+
+
+CREATE TABLE hora_maquina
+(
+  cod_hora_maquina serial NOT NULL,
+  n_dam character(45),
+  data_pagamento character(10),
+  quantidade_horas numeric(6,2),
+  valor_servico numeric(6,2),
+  cod_contribuinte integer,
+  cod_tipo integer,
+  pago character varying(3),
+  executado character varying(20),
+  tipo_servico character varying(30),
+  CONSTRAINT hora_maquina_pkey PRIMARY KEY (cod_hora_maquina),
+  CONSTRAINT hora_maquina_cod_contribuinte_fkey FOREIGN KEY (cod_contribuinte)
+      REFERENCES contribuinte (cod_contribuinte) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT hora_maquina_cod_tipo_fkey FOREIGN KEY (cod_tipo)
+      REFERENCES tipo_hora (cod_tipo) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+
+CREATE OR REPLACE FUNCTION lanca_servico2(integer, double precision, double precision, integer, character varying)
+  RETURNS integer AS
+$BODY$
+DECLARE
+	cod ALIAS FOR $1;
+	quantidade_hora ALIAS FOR $2;     
+	valor_total ALIAS FOR $3;
+	tipo_servico ALIAS FOR $4;
+	type_servico ALIAS FOR $5;
+BEGIN
+	INSERT INTO hora_maquina (quantidade_horas, valor_servico, cod_contribuinte, cod_tipo, pago,tipo_servico) 
+	VALUES (quantidade_hora,valor_total, cod, tipo_servico,'NÃO',type_servico);
+	
+	RETURN 0;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION lanca_servico2(integer, double precision, double precision, integer, character varying)
+  OWNER TO postgres;
